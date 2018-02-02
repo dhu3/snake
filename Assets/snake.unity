@@ -269,7 +269,7 @@ GameObject:
   - component: {fileID: 1559856099}
   - component: {fileID: 1559856100}
   m_Layer: 0
-  m_Name: BodySection
+  m_Name: EmptySnake
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -299,5 +299,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0bb5cb406ab726049830580e160fcf1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pointPrefab: {fileID: 4899112802817588, guid: 766909deb59cc2b4584f3607677d8ca9,
-    type: 2}
+  SectionPrefab: {fileID: 0}
