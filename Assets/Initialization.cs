@@ -2,14 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using System;
 
-public class Initializaztion : MonoBehaviour {
-	public GameObject SectionPrefab;
+public class Initialization : MonoBehaviour {
+	public GameObject BodyPrefab;
+	public GameObject WallPrefab;
+	public GameObject HeadPrefab;
+	public GameObject FoodPrefab;
+
 	[Range(10, 100)]
     public static float scale = 0.1f;
 
 	List<GameObject> Snake = new List<GameObject>();
-    int slength = 0;
     string sdirection = "R";
     Queue<string> directions = new Queue<string>();
 
@@ -18,18 +22,31 @@ public class Initializaztion : MonoBehaviour {
         Application.targetFrameRate = 2;
 
 		CreateSnake (10);
-        slength = Snake.Count;
 
-		Vector3 vectorNW, vectorNE, vectorSW, vectorSE;
-		vectorNW.y = 50 * scale; vectorNW.x = -50 * scale;
-		vectorNE.y = 50 * scale; vectorNE.x = 50 * scale;
-		vectorSW.y = -50 * scale; vectorSW.x = -50 * scale;
-		vectorSE.y = -50 * scale; vectorSE.x = 50 * scale;
+		GameObject WallN = Instantiate (WallPrefab);
+		Transform TWallN = WallN.GetComponent (typeof(Transform)) as Transform;
+		TWallN.localPosition = new Vector3 (0, 50*scale, 0);
+		TWallN.localScale = new Vector3 (100*scale, 1*scale, 1*scale);
 
-		CreateWall (vectorNW, vectorNE);
-		CreateWall (vectorSW, vectorNW);
-		CreateWall (vectorSE, vectorNE);
-		CreateWall (vectorSW, vectorSE);
+		GameObject WallS = Instantiate (WallPrefab);
+		Transform TWallS = WallS.GetComponent (typeof(Transform)) as Transform;
+		TWallS.localPosition = new Vector3 (0, -50*scale, 0);
+		TWallS.localScale = new Vector3 (100*scale, 1*scale, 1*scale);
+
+		GameObject WallW = Instantiate (WallPrefab);
+		Transform TWallW = WallW.GetComponent (typeof(Transform)) as Transform;
+		TWallW.localPosition = new Vector3 (-50*scale, 0, 0);
+		TWallW.localScale = new Vector3 (1*scale, 100*scale, 1*scale);
+
+		GameObject WallE = Instantiate (WallPrefab);
+		Transform TWallE = WallE.GetComponent (typeof(Transform)) as Transform;
+		TWallE.localPosition = new Vector3 (10*scale, 0, 0);
+		TWallE.localScale = new Vector3 (1*scale, 100*scale, 1*scale);
+
+//		CreateWall (vectorNW, vectorNE);
+//		CreateWall (vectorSW, vectorNW);
+//		CreateWall (vectorSE, vectorNE);
+//		CreateWall (vectorSW, vectorSE);
 	}
 
 	void CreateSnake(int blength){
@@ -38,30 +55,39 @@ public class Initializaztion : MonoBehaviour {
 		position.y = 0f;
 
 		for (int i=0; i < blength; i++) {
-			GameObject Section = Instantiate(SectionPrefab);
+			GameObject Section;
+			if (i < 2) {
+				Section = Instantiate (HeadPrefab);
+				if (i == 0) {
+					Section.AddComponent <SnakeHead> ();
+				}
+			} else {
+				Section = Instantiate(BodyPrefab);
+			}
 			position.x = -i*scale*1f;
 
 			Transform TSection = Section.GetComponent (typeof(Transform)) as Transform;
 			TSection.localPosition = position;
 			TSection.localScale = Vector3.one * scale;
-			if (i == 0) {
-				Section.AddComponent <SnakeHead>();
-			}
+
 			Snake.Add(Section);
 			directions.Enqueue("R");
 		}
 	}
 
 	void CreateWall(Vector3 sPosition, Vector3 ePosition){
-		Vector3 position;
-		position.z = 0f;
+		Vector3 position=sPosition;
 
-		for (int i=sPosition.x; i <= ePosition.x; i=i+scale*1f) {
-			position.x = sPosition.x + i * scale * 1f;
-			for (int j = sPosition.y; j <= ePosition.y; j = j + scale * 1f) {
-				GameObject Section = Instantiate(SectionPrefab);
-				position.y = sPosition.y + i * scale * 1f;
-
+		for (float i=sPosition.x; i <= ePosition.x; i=i+scale*1f) {
+			if (i < ePosition.x) {
+				position.x = position.x + scale;
+			}
+			for (float j = sPosition.y; j <= ePosition.y; j = j + scale * 1f) {
+				GameObject Section = Instantiate(WallPrefab);
+				if (j < ePosition.y) {
+					position.y = position.y + scale;
+				}
+				
 				Transform TSection = Section.GetComponent (typeof(Transform)) as Transform;
 				TSection.localPosition = position;
 				TSection.localScale = Vector3.one * scale;
@@ -69,8 +95,40 @@ public class Initializaztion : MonoBehaviour {
 		}
 	}
 
+	public void CreateFood(){
+		System.Random rng =new System.Random();
+		GameObject Food = Instantiate (FoodPrefab);
+		Transform TFood = Food.GetComponent (typeof(Transform)) as Transform;
+		TFood.localPosition = new Vector3 (rng.Next(-48, 48),rng.Next(-48, 48),0)*scale;
+		TFood.localScale = new Vector3(1,1,1)*scale;
+	}
+
+	public void SnakeGrow(){
+		GameObject Section = Instantiate(BodyPrefab);
+		Transform TSection = Section.GetComponent (typeof(Transform)) as Transform;
+		Transform TLastSection = Snake[Snake.Count-1].GetComponent (typeof(Transform)) as Transform;
+		Vector3 lastVector = TLastSection.localPosition;
+		string direction = directions.ToArray () [0];
+
+		if (direction == "L") {
+			TSection.localPosition = new Vector3 (lastVector.x + scale, lastVector.y, 0);
+		}
+		else if (direction == "R") {
+			TSection.localPosition = new Vector3 (lastVector.x - scale, lastVector.y, 0);
+		}
+		else if (direction == "U") {
+			TSection.localPosition = new Vector3 (lastVector.x, lastVector.y - scale, 0);
+		}
+		else if (direction == "D") {
+			TSection.localPosition = new Vector3 (lastVector.x, lastVector.y + scale, 0);
+		}
+		TSection.localScale = new Vector3(1,1,1)*scale;
+	}
+
     void Update()
     {
+		int slength= Snake.Count;
+
 		if (Input.GetKeyDown (KeyCode.A)) {
 			if (sdirection != "L" && sdirection != "R") {
 				sdirection = "L";
