@@ -25,6 +25,7 @@ public class SnakeHead : MonoBehaviour {
 		} else if (c.collider.name.Contains ("Food")) {
 			ScriptInit.CreateFood ();
 			ScriptInit.SnakeGrow ();
+			c.collider.Destroy ();
 		}
 	}
 }
